@@ -19,6 +19,51 @@ def binary_search(lst, x):
         return True
     else:
         return False
+    
+def create_gif(images, duration):
+    images_resized = [img.resize((550, 400)) for img in images]  
+
+    images_resized[0].save('output.gif',
+                   save_all=True,
+                   append_images=images_resized[1:],
+                   duration=duration,
+                   loop=0)
+    
+class ImageLabel(tk.Label):
+    """a label that displays images, and plays them if they are gifs"""
+    def load(self, im):
+        if isinstance(im, str):
+            im = Image.open(im)
+        self.loc = 0
+        self.frames = []
+
+        try:
+            for i in count(1):
+                self.frames.append(ImageTk.PhotoImage(im.copy()))
+                im.seek(i)
+        except EOFError:
+            pass
+
+        try:
+            self.delay = im.info['duration']
+        except:
+            self.delay = 100
+
+        if len(self.frames) == 1:
+            self.config(image=self.frames[0])
+        else:
+            self.next_frame()
+
+    def unload(self):
+        self.config(image=None)
+        self.frames = None
+
+    def next_frame(self):
+        if self.frames:
+            self.loc += 1
+            self.loc %= len(self.frames)
+            self.config(image=self.frames[self.loc])
+            self.after(self.delay, self.next_frame)
 
 def func():
     r = sr.Recognizer()
@@ -52,63 +97,26 @@ def func():
                                     break
                             
                             elif(binary_search(isl_gif, a.lower())):
-                                
-                                class ImageLabel(tk.Label):
-                                        """a label that displays images, and plays them if they are gifs"""
-                                        def load(self, im):
-                                            if isinstance(im, str):
-                                                im = Image.open(im)
-                                            self.loc = 0
-                                            self.frames = []
-
-                                            try:
-                                                for i in count(1):
-                                                    self.frames.append(ImageTk.PhotoImage(im.copy()))
-                                                    im.seek(i)
-                                            except EOFError:
-                                                pass
-
-                                            try:
-                                                self.delay = im.info['duration']
-                                            except:
-                                                self.delay = 100
-
-                                            if len(self.frames) == 1:
-                                                self.config(image=self.frames[0])
-                                            else:
-                                                self.next_frame()
-
-                                        def unload(self):
-                                            self.config(image=None)
-                                            self.frames = None
-
-                                        def next_frame(self):
-                                            if self.frames:
-                                                self.loc += 1
-                                                self.loc %= len(self.frames)
-                                                self.config(image=self.frames[self.loc])
-                                                self.after(self.delay, self.next_frame)
-                                search_end_time = time.time()
                                 root = tk.Tk()
                                 lbl = ImageLabel(root)
                                 lbl.pack()
                                 lbl.load(r'ISL_Gifs/{0}.gif'.format(a.lower()))
                                 root.mainloop()
                             else:
-                                search_end_time = time.time()
+                                images = []
                                 for i in range(len(a)):
-                                                if(a[i] in arr):
-                                        
-                                                        ImageAddress = 'letters/'+a[i]+'.jpg'
-                                                        ImageItself = Image.open(ImageAddress)
-                                                        ImageNumpyFormat = np.asarray(ImageItself)
-                                                        plt.imshow(ImageNumpyFormat)
-                                                        plt.draw()
-                                                        plt.pause(0.8)
-                                                else:
-                                                        continue
-                            search_time = search_end_time - search_start_time
-                            print("Search time:", search_time, "seconds")
+                                    if(a[i] in arr):
+                                        ImageAddress = 'letters/'+a[i]+'.jpg'
+                                        ImageItself = Image.open(ImageAddress)
+                                        images.append(ImageItself)
+                                    else:
+                                        continue
+                                create_gif(images, 2000)
+                                root = tk.Tk()
+                                lbl = ImageLabel(root)
+                                lbl.pack()
+                                lbl.load('output.gif')
+                                root.mainloop()
                     except:
                             print(" ")
                     plt.close()
